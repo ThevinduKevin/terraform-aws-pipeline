@@ -1,3 +1,13 @@
+terraform {
+  backend "s3" {
+    bucket = "terra-project-bucket"
+    key = "terraform/states/project-state.tfstate"
+    region = "ap-south-1"
+    dynamodb_table = "terra-project-table"
+    encrypt = true
+  }
+}
+
 provider "aws" {
   region = "ap-south-1"
 }
