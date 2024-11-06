@@ -42,9 +42,7 @@ jobs:
 
             #terraform init
             - name: Terraform init
-              run:   terraform init -backend-config="bucket=${{ env.TF_BUCKET_NAME }}" \
-                                    -backend-config="region=${{ env.AWS_REGION }}" \
-                                    -backend-config="dynamodb_table=${{ env.TF_DYNAMODB_TABLE }}"  
+              run: terraform init -backend-config="bucket=${{ env.TF_BUCKET_NAME }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=${{ env.TF_DYNAMODB_TABLE }}"  
             
             #format check
             - name: Terraform format check
