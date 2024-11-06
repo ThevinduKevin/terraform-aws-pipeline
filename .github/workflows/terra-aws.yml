@@ -1,2 +1,66 @@
+name: Terraform Workflow
+on: 
+    #triggers on push and pull request events
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
 
+jobs:
+    terraform:
+        runs-on: ubuntu-latest
+
+        permissions:
+            id-token: write
+            contents: read
+
+        env:
+            AWS_REGION: ${{ secrets.TF_REGION }}
+            TF_BUCKET_NAME: ${{ secrets.TF_BUCKET_NAME }}    
+            TF_DYNAMODB_TABLE: ${{ secrets.TF_DYNAMODB_TABLE }}
+
+        steps:
+            #checkout the repository
+            - name: Checkoud code
+              uses: actions/checkout@v3
+
+            #configure AWS credentials
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v2
+              with: 
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: ${{ secrets.TF_REGION }}
+
+            #set up terraform
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v2
+              with:
+                terraform_version: 1.5.6
+
+            #terraform init
+            - name: Terraform init
+              run:   terraform init -backend-config="bucket=${{ env.TF_BUCKET_NAME }}" \
+                                    -backend-config="region=${{ env.AWS_REGION }}" \
+                                    -backend-config="dynamodb_table=${{ env.TF_DYNAMODB_TABLE }}"  
+            
+            #format check
+            - name: Terraform format check
+              run: terraform fmt -check
+
+            #validate
+            - name: Terraform validate
+              run: terraform validate
+
+            #terraform plan
+            - name: Terraform plan
+              if: github.event_name == 'pull_request'
+              run: terraform plan
+
+            #terraform apply
+            - name: Terraform apply
+              if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+              run: terraform apply -auto-approve
 
